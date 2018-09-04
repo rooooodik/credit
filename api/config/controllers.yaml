@@ -1,0 +1,11 @@
+services:
+    app.controller.credit.create:
+        class: App\Common\Controller\ConfigurableController
+        tags: ['controller.service_arguments']
+        arguments:
+            - '@app.services.credit.create.request.transformer'
+            - '@validator'
+            - '@app.services.transformer.error_response'
+            - '@app.services.credit.create.service'
+            - '@app.services.credit.create.response.transformer'
+            - '@logger'

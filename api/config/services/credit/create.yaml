@@ -1,0 +1,115 @@
+parameters:
+    app.services.credit.create.service.month_in_year: 12
+    app.services.credit.create.service.precision: 2
+
+services:
+    app.services.credit.create.service:
+        class: App\Services\Credit\Create\ServiceAdapter\CalculatorService
+        arguments:
+            - '@app.services.credit.create.calculator'
+
+    app.services.credit.create.calculator:
+        class: App\Services\Credit\Create\Calculator\Calculator
+        arguments:
+            - '@app.services.credit.create.builder.payment_list'
+
+    app.services.credit.create.builder.payment_list:
+        class: App\Services\Credit\Create\Calculator\Builder\PaymentList\Builder
+        arguments:
+            - '@app.services.credit.create.factory.payment_list'
+            - '@app.services.credit.create.assembler.payment_list'
+
+    app.services.credit.create.factory.payment_list:
+        class: App\Services\Credit\Create\Calculator\Factory\PaymentList\Factory
+
+    app.services.credit.create.assembler.payment_list:
+        class: App\Services\Credit\Create\Calculator\Assembler\PaymentList\Payments
+        arguments:
+            - '@app.services.credit.create.builder.payment'
+            - '@app.services.credit.create.assembler.payment_list.debt_payment_calculator'
+            - '@app.services.credit.create.assembler.payment_list.month_payment_calculator'
+
+    app.services.credit.create.assembler.payment_list.month_payment_calculator:
+        class: App\Services\Credit\Create\Calculator\Assembler\PaymentList\MonthPercentCalculator\Calculator
+        arguments:
+            - '%app.services.credit.create.service.month_in_year%'
+
+    app.services.credit.create.assembler.payment_list.debt_payment_calculator:
+        class: App\Services\Credit\Create\Calculator\Assembler\PaymentList\DebtPaymentCalculator\Calculator
+        arguments:
+            - '%app.services.credit.create.service.precision%'
+
+    app.services.credit.create.builder.payment:
+        class: App\Services\Credit\Create\Calculator\Builder\Payment\Builder
+        arguments:
+            - '@app.services.credit.create.factory.payment'
+            - '@app.services.credit.create.assembler.payment'
+
+    app.services.credit.create.factory.payment:
+        class: App\Services\Credit\Create\Calculator\Factory\Payment\Factory
+
+    app.services.credit.create.assembler.payment:
+        class: App\Services\Credit\Create\Calculator\Assembler\Payment\Composite
+        arguments:
+            -
+                - '@app.services.credit.create.assembler.payment.percent_sum'
+                - '@app.services.credit.create.assembler.payment.debt_sum'
+                - '@app.services.credit.create.assembler.payment.remainder'
+                - '@app.services.credit.create.assembler.payment.sum'
+                - '@app.services.credit.create.assembler.payment.payment_number'
+                - '@app.services.credit.create.assembler.payment.payment_date'
+
+    app.services.credit.create.assembler.payment.percent_sum:
+        class: App\Services\Credit\Create\Calculator\Assembler\Payment\PercentSum
+        arguments:
+            - '%app.services.credit.create.service.precision%'
+
+    app.services.credit.create.assembler.payment.debt_sum:
+        class: App\Services\Credit\Create\Calculator\Assembler\Payment\DebtSum
+        arguments:
+            - '%app.services.credit.create.service.precision%'
+
+    app.services.credit.create.assembler.payment.remainder:
+        class: App\Services\Credit\Create\Calculator\Assembler\Payment\Remainder
+        arguments:
+            - '%app.services.credit.create.service.precision%'
+
+    app.services.credit.create.assembler.payment.sum:
+        class: App\Services\Credit\Create\Calculator\Assembler\Payment\Sum
+
+    app.services.credit.create.assembler.payment.payment_number:
+        class: App\Services\Credit\Create\Calculator\Assembler\Payment\PaymentNumber
+
+    app.services.credit.create.assembler.payment.payment_date:
+        class: App\Services\Credit\Create\Calculator\Assembler\Payment\PaymentDate
+
+#RequestTransformer
+    app.services.credit.create.request.transformer:
+        class: App\Common\Transformer\Request\RequestTransformer
+        arguments:
+            - '@app.services.credit.create.request.transformer.request.data_extractor'
+            - '@app.services.credit.create.request.transformer.request.builder'
+
+    app.services.credit.create.request.transformer.request.builder:
+        class: App\Common\Transformer\Request\Builder\ArrayToObject
+        arguments:
+            - '@jms_serializer.serializer'
+            - 'App\Dto\Credit\CreditRequest'
+
+    app.services.credit.create.request.transformer.request.data_extractor:
+        class: App\Common\Transformer\Request\DataExtractor\Json
+
+    app.services.credit.create.response.transformer:
+        class: App\Common\Transformer\Response\ResponseTransformer
+        arguments:
+            - '@app.services.credit.create.response.builder'
+            - '@jms_serializer.serializer'
+            - '%app.services.serialization.format%'
+
+    app.services.credit.create.response.builder:
+        class: App\Common\Transformer\Response\Builder\JsonResponseBuilder
+        arguments:
+            - '%app.services.http_code.200%'
+            - []
+
+

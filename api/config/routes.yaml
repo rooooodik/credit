@@ -1,0 +1,4 @@
+credit:
+    path: /credit
+    controller: app.controller.credit.create::action
+    methods: [POST]
